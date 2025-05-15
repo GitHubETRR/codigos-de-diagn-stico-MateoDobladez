@@ -60,7 +60,6 @@ Alumno_t* agregarAlumno(Alumno_t* lista) {
     }
     printf("Ingrese el nombre del alumno: ");
     fgets(nuevo->nombre, sizeof(nuevo->nombre), stdin);
-    nuevo->nombre[strcspn(nuevo->nombre, "\n")] = 0;
     nuevo->asistencia = false;
     if (lista == NULL) {
         nuevo->siguiente = NULL;
