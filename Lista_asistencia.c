@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define TAM_TXT = 50;
+#define TAM_TXT 50
 
 typedef struct Alumno {
     char nombre[TAM_TXT];
