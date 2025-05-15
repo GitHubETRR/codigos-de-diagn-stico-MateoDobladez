@@ -64,11 +64,11 @@ Alumno_t* agregarAlumno(Alumno_t* lista) {
         nuevo->siguiente = NULL;
         lista = nuevo;
     } else {
-        Alumno_t* actual = lista;
-        while (actual->siguiente != NULL) {
-            actual = actual->siguiente;
+        Alumno_t* aux = lista;
+        while (aux->siguiente != NULL) {
+            aux = aux->siguiente;
         }
-        actual->siguiente = nuevo;
+        aux->siguiente = nuevo;
         nuevo->siguiente = NULL;
     }
 
@@ -81,12 +81,12 @@ void mostrarLista(Alumno_t* lista) {
         printf("La lista esta vacia\n");
         return;
     }
-    Alumno_t* actual = lista;
-    while (actual != NULL) {
-        printf("Nombre: %s\n", actual->nombre);
-        printf("Asistencia: %s\n", actual->asistencia ? "Presente" : "Ausente");
+    Alumno_t* aux = lista;
+    while (aux != NULL) {
+        printf("Nombre: %s\n", aux->nombre);
+        printf("Asistencia: %s\n", aux->asistencia ? "Presente" : "Ausente");
         printf("------------------------\n");
-        actual = actual->siguiente;
+        aux = aux->siguiente;
     }
 }
 
@@ -96,29 +96,29 @@ void tomarAsistencia(Alumno_t* lista) {
         return;
     }
 
-    Alumno_t* actual = lista;
-    while (actual != NULL) {
-        printf("Alumno: %s\n", actual->nombre);
+    Alumno_t* aux = lista;
+    while (aux != NULL) {
+        printf("Alumno: %s\n", aux->nombre);
         printf("Ingrese 1 si esta presente o 0 si esta ausente: ");
         int respuesta;
         scanf("%d", &respuesta);
         getchar();
         if (respuesta == 1) {
-            actual->asistencia = true;
+            aux->asistencia = true;
         } else {
-            actual->asistencia = false;
+            aux->asistencia = false;
         }
-        actual = actual->siguiente;
+        aux = aux->siguiente;
     }
     printf("Asistencia registrada exitosamente!\n");
 }
 
 void liberarMemoria(Alumno_t* lista) {
-    Alumno_t* actual = lista;
-    while (actual != NULL) {
-        Alumno_t* siguiente = actual->siguiente;
-        free(actual);
-        actual = siguiente;
+    Alumno_t* aux = lista;
+    while (aux != NULL) {
+        Alumno_t* siguiente = aux->siguiente;
+        free(aux);
+        aux = siguiente;
     }
     lista = NULL;
 }
