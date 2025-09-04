@@ -58,6 +58,39 @@ public:
     }
 };
 
+// Funciones auxiliares para manejar las opciones del menú
+void mostrarEstados(const vector<Mesa>& mesas) {
+    for (const Mesa& mesa : mesas) {
+        mesa.mostrarEstado();
+    }
+}
+
+void manejarReservarMesa(vector<Mesa>& mesas) {
+    int numeroMesa;
+    string nombreCliente;
+    cout << "Ingrese número de mesa (1-10): ";
+    cin >> numeroMesa;
+    if (numeroMesa < 1 || numeroMesa > 10) {
+        cout << "Número de mesa inválido." << endl;
+        return;
+    }
+    cout << "Ingrese su nombre: ";
+    cin.ignore();
+    getline(cin, nombreCliente);
+    mesas[numeroMesa - 1].reservar(nombreCliente);
+}
+
+void manejarCancelarReserva(vector<Mesa>& mesas) {
+    int numeroMesa;
+    cout << "Ingrese número de mesa para cancelar (1-10): ";
+    cin >> numeroMesa;
+    if (numeroMesa < 1 || numeroMesa > 10) {
+        cout << "Número de mesa inválido." << endl;
+        return;
+    }
+    mesas[numeroMesa - 1].cancelarReserva();
+}
+
 int main() {
     vector<Mesa> mesas;
 
@@ -81,36 +114,14 @@ int main() {
 
         switch (opcion) {
             case ESTADO:
-                for (const Mesa& m : mesas) {
-                    m.mostrarEstado();
-                }
+                mostrarEstados(mesas);
                 break;
-            case RESERVAR: {
-                int num;
-                string nombre;
-                cout << "Ingrese número de mesa (1-10): ";
-                cin >> num;
-                if (num < 1 || num > 10) {
-                    cout << "Número de mesa inválido." << endl;
-                    break;
-                }
-                cout << "Ingrese su nombre: ";
-                cin.ignore();
-                getline(cin, nombre);
-                mesas[num - 1].reservar(nombre);
+            case RESERVAR:
+                manejarReservarMesa(mesas);
                 break;
-            }
-            case CANCELAR: {
-                int num;
-                cout << "Ingrese número de mesa para cancelar (1-10): ";
-                cin >> num;
-                if (num < 1 || num > 10) {
-                    cout << "Número de mesa inválido." << endl;
-                    break;
-                }
-                mesas[num - 1].cancelarReserva();
+            case CANCELAR:
+                manejarCancelarReserva(mesas);
                 break;
-            }
             case SALIR:
                 cout << "Cerrando el sistema." << endl;
                 break;
