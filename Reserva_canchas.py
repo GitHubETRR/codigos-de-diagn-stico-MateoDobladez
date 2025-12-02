@@ -1,182 +1,171 @@
-import datetime
-from typing import List, Optional
-import os
+from enum import Enum
+from typing import List, Dict
+from datetime import datetime, date, timedelta
 
-class Cancha:
-    """Representa una cancha deportiva."""
-    def __init__(self, nombre: str, tipo: str, capacidad: int):
-        self.nombre = nombre
-        self.tipo = tipo
-        self.capacidad = capacidad
-        self.reservas: List['Reserva'] = []
+class Menu(Enum):
+    NUEVA = "1"
+    MOSTRAR = "2"
+    CANCELAR = "3"
+    DISPONIBILIDAD = "4"
+    GUARDAR = "5"
+    SALIR = "6"
 
-    def esta_disponible(self, fecha: str, hora: str) -> bool:
-        for reserva in self.reservas:
-            if reserva.fecha == fecha and reserva.hora == hora:
-                return False
+canchas = [
+    {"nombre": "Pádel 1", "tipo": "Pádel", "capacidad": 4},
+    {"nombre": "Pádel 2", "tipo": "Pádel", "capacidad": 4},
+    {"nombre": "Fútbol",  "tipo": "Fútbol", "capacidad": 10}
+]
+
+reservas: List[Dict] = []
+
+
+def cargar_reservas():
+    global reservas
+    try:
+        with open(DATA_FILE, "r", encoding="utf-8") as f:
+            reservas = json.load(f)
+    except FileNotFoundError:
+        reservas = []
+    except:
+        reservas = []
+
+
+def guardar_reservas():
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(reservas, f, ensure_ascii=False, indent=2)
+    print("Reservas guardadas correctamente.")
+
+
+def mostrar_menu():
+    print("\n--- SISTEMA DE RESERVA DE CANCHAS ---")
+    for item in Menu:
+        nombre = item.name.capitalize()
+        print(f"{item.value}. {nombre}")
+
+
+def validar_fecha_hora(fecha: str, hora: str) -> bool:
+    try:
+        datetime.strptime(fecha, "%Y-%m-%d")
+        datetime.strptime(hora, "%H:%M")
         return True
+    except:
+        return False
 
-class Reserva:
-    """Representa una reserva de cancha."""
-    def __init__(self, usuario: str, cancha: Cancha, fecha: str, hora: str):
-        self.usuario = usuario
-        self.cancha = cancha
-        self.fecha = fecha  # formato: 'YYYY-MM-DD'
-        self.hora = hora    # formato: 'HH:MM'
 
-class SistemaReservas:
-    ARCHIVO_RESERVAS = "reservas.txt"
-
-    @staticmethod
-    def limpiar_pantalla():
-        os.system('cls' if os.name == 'nt' else 'clear')
-
-    def __init__(self):
-        self.canchas: List[Cancha] = [
-            Cancha('Pádel 1', 'Pádel', 4),
-            Cancha('Pádel 2', 'Pádel', 4),
-            Cancha('Fútbol', 'Fútbol', 10)
-        ]
-        self.reservas: List[Reserva] = []
-        self.cargar_reservas_desde_archivo()
-
-    def mostrar_menu(self):
-        while True:
-            self.limpiar_pantalla()
-            print("\n--- Sistema de Reserva de Canchas ---")
-            print("1. Nueva reserva")
-            print("2. Ver todas las reservas agendadas")
-            print("3. Cancelar una reserva")
-            print("4. Consultar disponibilidad")
-            print("5. Salir")
-            opcion = input("Seleccione una opción: ")
-            if opcion == '1':
-                self.nueva_reserva()
-            elif opcion == '2':
-                self.mostrar_reservas()
-            elif opcion == '3':
-                self.cancelar_reserva()
-            elif opcion == '4':
-                self.consultar_disponibilidad()
-            elif opcion == '5':
-                print("Saliendo... ¡Hasta luego!")
-                break
-            else:
-                print("Opción no válida. Intente nuevamente.")
-                input("Presione ENTER para continuar...")
-
-    def nueva_reserva(self):
-        self.limpiar_pantalla()
-        usuario = input("Ingrese su nombre: ")
-        print("Tipos de cancha disponibles:")
-        for idx, cancha in enumerate(self.canchas):
-            print(f"{idx + 1}. {cancha.nombre} ({cancha.tipo})")
-        try:
-            idx_cancha = int(input("Seleccione el número de la cancha: ")) - 1
-            cancha = self.canchas[idx_cancha]
-        except (ValueError, IndexError):
-            print("Selección no válida.")
-            input("Presione ENTER para continuar...")
-            return
-        fecha = input("Ingrese la fecha de la reserva (AAAA-MM-DD): ")
-        hora = input("Ingrese la hora de la reserva (HH:MM, formato 24hs): ")
-        # Validar fecha y hora
-        if not self.validar_fecha_hora(fecha, hora):
-            print("Fecha u hora con formato incorrecto.")
-            input("Presione ENTER para continuar...")
-            return
-        if not cancha.esta_disponible(fecha, hora):
-            print("La cancha seleccionada NO está disponible en ese horario.")
-            input("Presione ENTER para continuar...")
-            return
-        reserva = Reserva(usuario, cancha, fecha, hora)
-        cancha.reservas.append(reserva)
-        self.reservas.append(reserva)
-        self.guardar_reservas_en_archivo()
-        print(f"Reserva creada exitosamente para {usuario} en {cancha.nombre} el {fecha} a las {hora} hs.")
-        input("Presione ENTER para continuar...")
-
-    def mostrar_reservas(self):
-        self.limpiar_pantalla()
-        if not self.reservas:
-            print("No hay reservas agendadas.")
-            input("Presione ENTER para continuar...")
-            return
-        print("\n--- Reservas agendadas ---")
-        for reserva in self.reservas:
-            print(f"Usuario: {reserva.usuario} | Cancha: {reserva.cancha.nombre} | Fecha: {reserva.fecha} | Hora: {reserva.hora}")
-        input("Presione ENTER para continuar...")
-
-    def cancelar_reserva(self):
-        self.limpiar_pantalla()
-        usuario = input("Ingrese su nombre para cancelar su reserva: ")
-        reservas_usuario = [r for r in self.reservas if r.usuario == usuario]
-        if not reservas_usuario:
-            print("No se encontraron reservas a nombre de ese usuario.")
-            input("Presione ENTER para continuar...")
-            return
-        print("Sus reservas:")
-        for idx, reserva in enumerate(reservas_usuario):
-            print(f"{idx + 1}. {reserva.cancha.nombre} | {reserva.fecha} | {reserva.hora}")
-        try:
-            idx_reserva = int(input("Seleccione el número de la reserva a cancelar: ")) - 1
-            reserva_a_cancelar = reservas_usuario[idx_reserva]
-        except (ValueError, IndexError):
-            print("Selección no válida.")
-            input("Presione ENTER para continuar...")
-            return
-        reserva_a_cancelar.cancha.reservas.remove(reserva_a_cancelar)
-        self.reservas.remove(reserva_a_cancelar)
-        self.guardar_reservas_en_archivo()
-        print("Reserva cancelada correctamente.")
-        input("Presione ENTER para continuar...")
-
-    def consultar_disponibilidad(self):
-        self.limpiar_pantalla()
-        for cancha in self.canchas:
-            print(f"\nDisponibilidad de {cancha.nombre} ({cancha.tipo}):")
-            horarios_posibles = [f"{h:02}:00" for h in range(8, 23)]
-            for fecha_dia in self.proximos_dias(5):
-                libres = [h for h in horarios_posibles if cancha.esta_disponible(fecha_dia, h)]
-                print(f"  Día {fecha_dia}: {' | '.join(libres) if libres else 'Sin turnos libres'}")
-        input("Presione ENTER para continuar...")
-
-    def cargar_reservas_desde_archivo(self):
-        if not os.path.isfile(self.ARCHIVO_RESERVAS):
-            return
-        with open(self.ARCHIVO_RESERVAS, 'r', encoding='utf-8') as f:
-            for linea in f:
-                partes = linea.strip().split(',')
-                if len(partes) != 4:
-                    continue
-                usuario, nombre_cancha, fecha, hora = partes
-                # Buscar cancha por nombre
-                cancha = next((c for c in self.canchas if c.nombre == nombre_cancha), None)
-                if cancha:
-                    reserva = Reserva(usuario, cancha, fecha, hora)
-                    cancha.reservas.append(reserva)
-                    self.reservas.append(reserva)
-
-    def guardar_reservas_en_archivo(self):
-        with open(self.ARCHIVO_RESERVAS, 'w', encoding='utf-8') as f:
-            for reserva in self.reservas:
-                linea = f"{reserva.usuario},{reserva.cancha.nombre},{reserva.fecha},{reserva.hora}\n"
-                f.write(linea)
-
-    @staticmethod
-    def validar_fecha_hora(fecha: str, hora: str) -> bool:
-        try:
-            datetime.datetime.strptime(fecha, "%Y-%m-%d")
-            datetime.datetime.strptime(hora, "%H:%M")
-            return True
-        except ValueError:
+def cancha_disponible(nombre_cancha: str, fecha: str, hora: str) -> bool:
+    for r in reservas:
+        if r["cancha"] == nombre_cancha and r["fecha"] == fecha and r["hora"] == hora:
             return False
+    return True
 
-    @staticmethod
-    def proximos_dias(cantidad: int = 7) -> List[str]:
-        hoy = datetime.date.today()
-        return [(hoy + datetime.timedelta(days=i)).strftime("%Y-%m-%d") for i in range(cantidad)]
+
+def nueva_reserva():
+    usuario = input("Ingrese su nombre: ").strip()
+    print("Canchas disponibles:")
+    for i, c in enumerate(canchas, start=1):
+        print(f"{i}. {c['nombre']} ({c['tipo']})")
+
+    try:
+        idx = int(input("Seleccione la cancha: ")) - 1
+        cancha = canchas[idx]
+    except:
+        print("Selección inválida.")
+        return
+
+    fecha = input("Ingrese fecha (AAAA-MM-DD): ").strip()
+    hora = input("Ingrese hora (HH:MM): ").strip()
+
+    if not validar_fecha_hora(fecha, hora):
+        print("Formato de fecha u hora incorrecto.")
+        return
+
+    if not cancha_disponible(cancha["nombre"], fecha, hora):
+        print("La cancha no está disponible en ese horario.")
+        return
+
+    reservas.append({
+        "usuario": usuario,
+        "cancha": cancha["nombre"],
+        "fecha": fecha,
+        "hora": hora
+    })
+
+    print("Reserva creada exitosamente.")
+
+
+def mostrar_reservas():
+    if not reservas:
+        print("No hay reservas registradas.")
+        return
+    print("\n--- Reservas agendadas ---")
+    for r in reservas:
+        print(f"{r['usuario']} | {r['cancha']} | {r['fecha']} | {r['hora']}")
+
+
+def cancelar_reserva():
+    usuario = input("Ingrese su nombre: ").strip()
+    lista = [r for r in reservas if r["usuario"] == usuario]
+
+    if not lista:
+        print("No hay reservas asociadas.")
+        return
+
+    print("Sus reservas:")
+    for i, r in enumerate(lista, start=1):
+        print(f"{i}. {r['cancha']} | {r['fecha']} | {r['hora']}")
+
+    try:
+        idx = int(input("Seleccione número: ")) - 1
+        reserva_obj = lista[idx]
+    except:
+        print("Selección inválida.")
+        return
+
+    reservas.remove(reserva_obj)
+    print("Reserva cancelada.")
+
+
+def proximos_dias(n: int) -> List[str]:
+    hoy = date.today()
+    return [(hoy + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(n)]
+
+
+def consultar_disponibilidad():
+    for c in canchas:
+        print(f"\nDisponibilidad {c['nombre']} ({c['tipo']}):")
+        for f in proximos_dias(5):
+            libres = []
+            for h in range(8, 23):
+                hora = f"{h:02}:00"
+                if cancha_disponible(c["nombre"], f, hora):
+                    libres.append(hora)
+            lista = " | ".join(libres) if libres else "Sin turnos"
+            print(f"{f}: {lista}")
+
+
+def main():
+    cargar_reservas()
+    while True:
+        mostrar_menu()
+        opcion = input("Seleccione opción: ").strip()
+
+        if opcion == Menu.NUEVA.value:
+            nueva_reserva()
+        elif opcion == Menu.MOSTRAR.value:
+            mostrar_reservas()
+        elif opcion == Menu.CANCELAR.value:
+            cancelar_reserva()
+        elif opcion == Menu.DISPONIBILIDAD.value:
+            consultar_disponibilidad()
+        elif opcion == Menu.GUARDAR.value:
+            guardar_reservas()
+        elif opcion == Menu.SALIR.value:
+            guardar_reservas()
+            print("Hasta luego.")
+            break
+        else:
+            print("Opción inválida.")
+
 
 if __name__ == "__main__":
-    sistema = SistemaReservas()
-    sistema.mostrar_menu()
+    main()
