@@ -1,3 +1,33 @@
+import os
+
+
+# Constantes para las opciones del menú
+AGREGAR_PRODUCTO = "1"
+VER_INVENTARIO = "2"
+REALIZAR_COMPRA = "3"
+ELIMINAR_PRODUCTO = "4"
+SALIR = "5"
+
+MENU_OPCIONES = [
+    (AGREGAR_PRODUCTO, "Agregar producto"),
+    (VER_INVENTARIO, "Ver inventario"),
+    (REALIZAR_COMPRA, "Realizar compra"),
+    (ELIMINAR_PRODUCTO, "Eliminar producto del inventario"),
+    (SALIR, "Salir"),
+]
+
+
+def limpiar_pantalla():
+    """Limpia la pantalla de la consola según el sistema operativo"""
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+
+def pausar_e_limpiar():
+    """Espera que el usuario presione Enter y luego limpia la pantalla"""
+    input("\nPresione Enter para continuar...")
+    limpiar_pantalla()
+
+
 def agregar_producto(inventario, nombre, precio, cantidad):
     """Agrega un nuevo producto o actualiza la cantidad si ya existe"""
     nombre_lower = nombre.lower()
@@ -93,11 +123,8 @@ def mostrar_menu():
     print("\n" + "="*60)
     print("SISTEMA DE INVENTARIO - KIOSCO")
     print("="*60)
-    print("1. Agregar producto")
-    print("2. Ver inventario")
-    print("3. Realizar compra")
-    print("4. Eliminar producto del inventario")
-    print("5. Salir")
+    for valor, texto in MENU_OPCIONES:
+        print(f"{valor}. {texto}")
     print("="*60)
 
 
@@ -137,7 +164,7 @@ def main():
         mostrar_menu()
         opcion = input("\nSeleccione una opcion: ").strip()
         
-        if opcion == "1":
+        if opcion == AGREGAR_PRODUCTO:
             print("\n--- AGREGAR PRODUCTO ---")
             nombre = input("Nombre del producto: ").strip()
             
@@ -149,13 +176,16 @@ def main():
             cantidad = obtener_entero("Cantidad inicial: ")
             
             agregar_producto(inventario, nombre, precio, cantidad)
+            pausar_e_limpiar()
         
-        elif opcion == "2":
+        elif opcion == VER_INVENTARIO:
             mostrar_inventario(inventario)
+            pausar_e_limpiar()
         
-        elif opcion == "3":
+        elif opcion == REALIZAR_COMPRA:
             if not inventario:
                 print("\nEl inventario esta vacio. No se pueden realizar compras.")
+                pausar_e_limpiar()
                 continue
             
             print("\n--- REALIZAR COMPRA ---")
@@ -164,10 +194,12 @@ def main():
             cantidad = obtener_entero("Cantidad a comprar: ")
             
             realizar_compra(inventario, nombre, cantidad)
+            pausar_e_limpiar()
         
-        elif opcion == "4":
+        elif opcion == ELIMINAR_PRODUCTO:
             if not inventario:
                 print("\nEl inventario esta vacio.")
+                pausar_e_limpiar()
                 continue
             
             print("\n--- ELIMINAR PRODUCTO ---")
@@ -179,13 +211,15 @@ def main():
                 eliminar_producto(inventario, nombre)
             else:
                 print("Operacion cancelada")
+            pausar_e_limpiar()
         
-        elif opcion == "5":
+        elif opcion == SALIR:
             print("\nGracias por usar el Sistema de Inventario del Kiosco!")
             break
         
         else:
             print("Opcion no valida. Por favor seleccione una opcion del 1 al 5.")
+            pausar_e_limpiar()
 
 
 if __name__ == "__main__":

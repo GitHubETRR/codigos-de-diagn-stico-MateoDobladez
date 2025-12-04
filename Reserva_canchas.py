@@ -1,14 +1,25 @@
-from enum import Enum
-from typing import List, Dict
 from datetime import datetime, date, timedelta
+import os
 
-class Menu(Enum):
-    NUEVA = "1"
-    MOSTRAR = "2"
-    CANCELAR = "3"
-    DISPONIBILIDAD = "4"
-    GUARDAR = "5"
-    SALIR = "6"
+
+MENU_OPCIONES = [
+    ("1", "Nueva"),
+    ("2", "Mostrar"),
+    ("3", "Cancelar"),
+    ("4", "Disponibilidad"),
+    ("5", "Salir"),
+]
+
+
+def limpiar_pantalla() -> None:
+    """Limpia la pantalla de la consola según el sistema operativo."""
+    os.system("cls" if os.name == "nt" else "clear")
+
+
+def pausar_e_limpiar() -> None:
+    """Espera que el usuario presione Enter y luego limpia la pantalla."""
+    input("\nPresione Enter para continuar...")
+    limpiar_pantalla()
 
 canchas = [
     {"nombre": "Pádel 1", "tipo": "Pádel", "capacidad": 4},
@@ -16,31 +27,13 @@ canchas = [
     {"nombre": "Fútbol",  "tipo": "Fútbol", "capacidad": 10}
 ]
 
-reservas: List[Dict] = []
-
-
-def cargar_reservas():
-    global reservas
-    try:
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            reservas = json.load(f)
-    except FileNotFoundError:
-        reservas = []
-    except:
-        reservas = []
-
-
-def guardar_reservas():
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(reservas, f, ensure_ascii=False, indent=2)
-    print("Reservas guardadas correctamente.")
+reservas = []
 
 
 def mostrar_menu():
     print("\n--- SISTEMA DE RESERVA DE CANCHAS ---")
-    for item in Menu:
-        nombre = item.name.capitalize()
-        print(f"{item.value}. {nombre}")
+    for valor, nombre in MENU_OPCIONES:
+        print(f"{valor}. {nombre}")
 
 
 def validar_fecha_hora(fecha: str, hora: str) -> bool:
@@ -68,15 +61,37 @@ def nueva_reserva():
     try:
         idx = int(input("Seleccione la cancha: ")) - 1
         cancha = canchas[idx]
-    except:
+    except Exception:
         print("Selección inválida.")
         return
 
     fecha = input("Ingrese fecha (AAAA-MM-DD): ").strip()
+
+    # Validar solo la fecha
+    try:
+        datetime.strptime(fecha, "%Y-%m-%d")
+    except ValueError:
+        print("Formato de fecha incorrecto.")
+        return
+
+    # Mostrar horarios ya reservados para esa cancha y fecha
+    horarios_ocupados = sorted(
+        {r["hora"] for r in reservas if r["cancha"] == cancha["nombre"] and r["fecha"] == fecha}
+    )
+
+    if horarios_ocupados:
+        print("\nHorarios ya reservados para esa cancha en ese día:")
+        print(" | ".join(horarios_ocupados))
+    else:
+        print("\nNo hay reservas previas para esa cancha en ese día.")
+
     hora = input("Ingrese hora (HH:MM): ").strip()
 
-    if not validar_fecha_hora(fecha, hora):
-        print("Formato de fecha u hora incorrecto.")
+    # Validar solo la hora
+    try:
+        datetime.strptime(hora, "%H:%M")
+    except ValueError:
+        print("Formato de hora incorrecto.")
         return
 
     if not cancha_disponible(cancha["nombre"], fecha, hora):
@@ -125,7 +140,7 @@ def cancelar_reserva():
     print("Reserva cancelada.")
 
 
-def proximos_dias(n: int) -> List[str]:
+def proximos_dias(n):
     hoy = date.today()
     return [(hoy + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(n)]
 
@@ -144,27 +159,28 @@ def consultar_disponibilidad():
 
 
 def main():
-    cargar_reservas()
     while True:
         mostrar_menu()
         opcion = input("Seleccione opción: ").strip()
 
-        if opcion == Menu.NUEVA.value:
+        if opcion == "1":
             nueva_reserva()
-        elif opcion == Menu.MOSTRAR.value:
+        elif opcion == "2":
             mostrar_reservas()
-        elif opcion == Menu.CANCELAR.value:
+        elif opcion == "3":
             cancelar_reserva()
-        elif opcion == Menu.DISPONIBILIDAD.value:
+        elif opcion == "4":
             consultar_disponibilidad()
-        elif opcion == Menu.GUARDAR.value:
-            guardar_reservas()
-        elif opcion == Menu.SALIR.value:
-            guardar_reservas()
+        elif opcion == "5":
             print("Hasta luego.")
             break
         else:
             print("Opción inválida.")
+            pausar_e_limpiar()
+            continue
+
+        # Después de cada acción válida, pausar y limpiar pantalla
+        pausar_e_limpiar()
 
 
 if __name__ == "__main__":
